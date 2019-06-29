@@ -4,23 +4,14 @@
 #include "gamma.h"
 
 #define nPlanes 4
+//Netid-it233, mr2265
 
-// The fact that the display driver interrupt stuff is tied to the
-// singular Timer1 doesn't really take well to object orientation with
-// multiple RGBmatrixPanel instances.  The solution at present is to
-// allow instances, but only one is active at any given time, via its
-// begin() method.  The implementation is still incomplete in parts;
-// the prior active panel really should be gracefully disabled, and a
-// stop() method should perhaps be added...assuming multiple instances
-// are even an actual need.
-//static RGBmatrixPanel *activePanel = NULL;
-
-// Code common to both the 16x32 and 32x32 constructors:
+// Codeour group implemented 32x32 constructors:
 void RGBmatrixPanel::init(uint8_t rows, bool dbuf)
 {
-    nRows = rows; // Number of multiplexed rows; actual height is 2X this
-    // Allocate and initialize matrix buffer:
-    int buffsize  = 32*nRows*3, // x3 = 3 bytes holds 4 planes "packed"
+    nRows = rows; // Number of multiplexed rows
+
+    int buffsize  = 32*nRows*3, // allocate and initialize buffer size
         allocsize = (dbuf == true) ? (buffsize * 2) : buffsize;
     if(NULL == (matrixbuff[0] = (uint8_t *)malloc(allocsize))) return;
     memset(matrixbuff[0], 0, allocsize);
@@ -33,24 +24,24 @@ void RGBmatrixPanel::init(uint8_t rows, bool dbuf)
     backindex = 0;     // Array index of back buffer
 }
 
-//// Constructor for 16x32 panel:
-//RGBmatrixPanel::RGBmatrixPanel(PinName r1,PinName g1,PinName b1,PinName r2,PinName g2,PinName b2,PinName a,PinName b, PinName c, PinName sclk, PinName latch, PinName oe, bool dbuf)
-//    :Adafruit_GFX(32, 16),
-//     _dataBus(r1,g1,b1,r2,g2,b2),
-//     _rowBus(a,b,c),
-//     _d(NC),
-//     _sclk(sclk),
-//     _latch(latch),
-//     _oe(oe)
-//{
-//    init(8, dbuf);
-//}
+// Constructor for 16x32 panel:
+RGBmatrixPanel::RGBmatrixPanel(PinName r1,PinName g1,PinName b1,PinName r2,PinName g2,PinName b2,PinName a,PinName b, PinName c, PinName sclk, PinName latch, PinName oe, bool dbuf)
+    :Adafruit_GFX(32, 16),
+     _dataBus(r1,g1,b1,r2,g2,b2),
+     _rowBus(a,b,c),
+     _d(NC),
+     _sclk(sclk),
+     _latch(latch),
+     _oe(oe)
+{
+    init(8, dbuf);
+}
 
-// Constructor for 32x32 panel:
+// Constructor for 32x32 panel: modified this in order for our project to work.
 RGBmatrixPanel::RGBmatrixPanel(PinName r1,PinName r2,PinName g1,PinName g2,PinName b1,PinName b2,PinName a,PinName b,PinName c,PinName d,PinName sclk,PinName latch,PinName oe,bool dbuf)
     :Adafruit_GFX(32, 32),
      _dataBus(r1,g1,b1,r2,g2,b2),
-     _rowBus(a,b,c),
+     _rowBus(a,b,c,d),
      _d(d),// Init 32x32-specific elements:
      _sclk(sclk),
      _latch(latch),
@@ -63,14 +54,14 @@ void RGBmatrixPanel::begin(void)
 {
 
     backindex   = 0;                         // Back buffer
-    buffptr     = matrixbuff[1 - backindex]; // -> front buffer
-    // activePanel = this;                      // For interrupt hander
+    buffptr     = matrixbuff[1 - backindex]; // -> front buffer for interrupt handler
+                      
 
-    // Set up Timer for interrupt:
+    //We Set up Timer for interrupt
 #ifndef DEBUG
-    _refresh.attach_us(this,(&RGBmatrixPanel::updateDisplay),100);   //updateDisplay() called every 1ms
+   
 #else
-    _refresh.attach(this,(&RGBmatrixPanel::updateDisplay),0.5);   //updateDisplay() called every 2s
+    _refresh.attach(this,(&RGBmatrixPanel::updateDisplay),0.5);   //updateDisplay() is called every 2s
 #endif
 }
 
@@ -388,4 +379,3 @@ void RGBmatrixPanel::updateDisplay(void)
     }
 
 }
-
